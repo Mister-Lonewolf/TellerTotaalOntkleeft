@@ -2,23 +2,27 @@ package TellerTotaalOntkleeft;
 
 import java.io.*;
 
+import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.*;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class XLSX {
-    private XSSFWorkbook XLSXWorkbookObject;
+    private final XSSFWorkbook XLSXWorkbookObject;
     String filePath;
     String ontkleefDate;
-    String[] types = {};
+    List<String> types = new ArrayList<>();
     double[] amounts = new double[0];
+    List<String> statuses = new ArrayList<>();
     int typelocationInSheet = 1;
     int amountlocationInSheet = 23;
 
-    public XLSX(String filename) throws FileNotFoundException, IOException{
+    public XLSX(String filename) throws IOException{
         filePath = "." + File.separator + filename;
         File file = new File(filePath);
         FileInputStream inputFile = new FileInputStream(file);
@@ -51,28 +55,47 @@ public class XLSX {
             int numberOfType = 0;
             if (!row.getZeroHeight()) {
                 if (rowNumber != 0) {
-                    for(int i = 0; i < types.length; i++) {
-                        if(row.getCell(typelocationInSheet).getStringCellValue().equals(types[i])){
+                    String type = row.getCell(typelocationInSheet).getStringCellValue();
+                    for(int i = 0; i < types.size(); i++) {
+                        if(type.equals(types.get(i))){
                             exists = true;
                             numberOfType = i;
                         }
                     }
+                    double amount = row.getCell(amountlocationInSheet).getNumericCellValue();
                     if(exists){
-                        amounts[numberOfType] += row.getCell(amountlocationInSheet).getNumericCellValue();
+                        amounts[numberOfType] += amount;
                     }
                     else{
                         double[] tempAmount = new double[amounts.length+1];
                         System.arraycopy(amounts, 0, tempAmount, 0, amounts.length);
-                        tempAmount[tempAmount.length-1] = row.getCell(amountlocationInSheet).getNumericCellValue();
+                        tempAmount[tempAmount.length-1] = amount;
                         amounts = tempAmount;
 
-                        String[] tempType = new String[types.length+1];
-                        System.arraycopy(types, 0, tempType, 0, types.length);
-                        tempType[tempType.length-1] = row.getCell(typelocationInSheet).getStringCellValue();
-                        types = tempType;
+                        //String[] tempType = new String[types.size()+1];
+                        //System.arraycopy(types, 0, tempType, 0, types.size());
+                        //tempType[tempType.length-1] = type;
+                        //types = tempType;
+                        types.add(type);
+                    }
+                    Cell status = row.getCell(4);
+                    String statusValue;
+                    if(status == null){
+                        statusValue = "blanco";
+                    }
+                    else{
+                        statusValue = status.getStringCellValue();
+                    }
+                    for (String s : statuses) {
+                        if (statusValue.equals(s)) {
+                            exists = true;
+                            break;
+                        }
+                    }
+                    if(!exists){
+                        statuses.add(statusValue);
                     }
                 }
-
                 System.out.printf("\n%d van de %d rijen geteld.", rowNumber, XLSXWorkSheet.getLastRowNum());
             }
             else{
@@ -83,7 +106,7 @@ public class XLSX {
         System.out.println("\n");
     }
 
-    public void writeFile() throws FileNotFoundException, IOException{
+    public void writeFile() throws IOException{
         Scanner scanner = new Scanner(System.in);
         filePath = filePath.substring(0, filePath.length()-5);
         filePath = filePath + " totalen ";
@@ -138,10 +161,19 @@ public class XLSX {
         totalSheet.getRow(2).createCell(0).setCellValue("Product");
         totalSheet.getRow(2).createCell(1).setCellValue("Aantal");
         setStyle(true, totalSheet, 2, XLSXWorkbookTotals);
-        for (int i = 0; i < types.length; i++){
+        for (int i = 0; i < types.size(); i++){
             totalSheet.createRow(totalSheet.getLastRowNum()+1);
-            totalSheet.getRow(totalSheet.getLastRowNum()).createCell(0).setCellValue(types[i]);
+            totalSheet.getRow(totalSheet.getLastRowNum()).createCell(0).setCellValue(types.get(i));
             totalSheet.getRow(totalSheet.getLastRowNum()).createCell(1).setCellValue(amounts[i]);
+            setStyle(false, totalSheet, totalSheet.getLastRowNum(), XLSXWorkbookTotals);
+        }
+        int rowNumber = totalSheet.getLastRowNum()+4;
+        totalSheet.createRow(rowNumber);
+        totalSheet.getRow(rowNumber).createCell(0).setCellValue("Getelde statussen");
+        setStyle(true, totalSheet, rowNumber, XLSXWorkbookTotals);
+        for (String status : statuses) {
+            totalSheet.createRow(totalSheet.getLastRowNum() + 1);
+            totalSheet.getRow(totalSheet.getLastRowNum()).createCell(0).setCellValue(status);
             setStyle(false, totalSheet, totalSheet.getLastRowNum(), XLSXWorkbookTotals);
         }
 
