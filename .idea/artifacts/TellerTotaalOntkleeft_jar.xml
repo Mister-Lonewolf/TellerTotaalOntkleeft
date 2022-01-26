@@ -1,0 +1,13 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="TellerTotaalOntkleeft:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/TellerTotaalOntkleeft_jar</output-path>
+    <root id="archive" name="TellerTotaalOntkleeft.jar">
+      <element id="module-output" name="TellerTotaalOntkleeft" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/libraries/poi-3.17.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/libraries/poi-ooxml-3.17.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/libraries/xmlbeans-2.6.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/libraries/poi-ooxml-schemas-3.17.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/libraries/commons-collections4-4.1.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>
