@@ -49,17 +49,17 @@ public class XLSX {
         int rowNumber = 0;
         //iterating over excel file
         for (Row row : XLSXWorkSheet) {
-            boolean exists = false;
-            int numberOfType = 0;
+            //boolean exists = false;
+            //int numberOfType = 0;
             if (!row.getZeroHeight()) {
                 if (rowNumber != 0) {
                     String type = row.getCell(typelocationInSheet).getStringCellValue();
-                    //for(int i = 0; i < types.size(); i++) {
-                    //    if(type.equals(types.get(i))){
-                    //        exists = true;
-                    //        numberOfType = i;
-                    //    }
-                    //}
+                    /*for(int i = 0; i < types.size(); i++) {
+                        if(type.equals(types.get(i))){
+                            exists = true;
+                            numberOfType = i;
+                        }
+                    }*/
                     double amount = row.getCell(amountlocationInSheet).getNumericCellValue();
                     if(types.containsKey(type)){//if(exists){
                         amount += types.get(type);
@@ -67,27 +67,27 @@ public class XLSX {
                     }
                     types.putIfAbsent(type, amount);
 
-                    //else{
-                        //double[] tempAmount = new double[amounts.length+1];
-                        //System.arraycopy(amounts, 0, tempAmount, 0, amounts.length);
-                        //tempAmount[tempAmount.length-1] = amount;
-                        //amounts = tempAmount;
+                    /*else{
+                        double[] tempAmount = new double[amounts.length+1];
+                        System.arraycopy(amounts, 0, tempAmount, 0, amounts.length);
+                        tempAmount[tempAmount.length-1] = amount;
+                        amounts = tempAmount;
 
-                        //String[] tempType = new String[types.size()+1];
-                        //System.arraycopy(types, 0, tempType, 0, types.size());
-                        //tempType[tempType.length-1] = type;
-                        //types = tempType;
-                        //types.add(type);
-                    //}
+                        String[] tempType = new String[types.size()+1];
+                        System.arraycopy(types, 0, tempType, 0, types.size());
+                        tempType[tempType.length-1] = type;
+                        types = tempType;
+                        types.add(type);
+                    }*/
                     Cell status = row.getCell(4);
                     String statusValue = String.valueOf(CellUtils.getCellValue(status));
 
-                    //for (String s : statuses) {
-                    //    if (statusValue.equals(s)) {
-                    //        exists = true;
-                    //        break;
-                    //    }
-                    //}
+                    /*for (String s : statuses) {
+                        if (statusValue.equals(s)) {
+                            exists = true;
+                            break;
+                        }
+                    }*/
                     if(statuses.containsKey(statusValue)){//if(!exists){
                         //statuses.add(statusValue);
                         int amountOfStatuses = statuses.get(statusValue) + 1;
@@ -188,20 +188,15 @@ public class XLSX {
         XLSXWorkbookTotals.close();
     }
 
-    public static Map<String, Integer> sortByKey(Map<String, Integer> hm){
+    public static Map<String, Integer> sortByKey(Map<String, Integer> map){
         // Create a list from elements of HashMap
-        List<Map.Entry<String, Integer> > list
-                = new LinkedList<Map.Entry<String, Integer> >(
-                hm.entrySet());
+        List<Map.Entry<String, Integer> > list = new LinkedList<>(map.entrySet());
 
         // Sort the list using lambda expression
-        Collections.sort(
-                list,
-                (i1, i2) -> i1.getKey().compareTo(i2.getKey()));
+        list.sort(Map.Entry.comparingByKey());
 
         // put data from sorted list to hashmap
-        HashMap<String, Integer> temp
-                = new LinkedHashMap<String, Integer>();
+        HashMap<String, Integer> temp = new LinkedHashMap<>();
         for (Map.Entry<String, Integer> aa : list) {
             temp.put(aa.getKey(), aa.getValue());
         }
