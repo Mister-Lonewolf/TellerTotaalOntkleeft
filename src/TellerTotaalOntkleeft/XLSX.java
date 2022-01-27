@@ -76,6 +76,7 @@ public class XLSX {
                         //System.arraycopy(types, 0, tempType, 0, types.size());
                         //tempType[tempType.length-1] = type;
                         //types = tempType;
+
                         types.add(type);
                     }
                     Cell status = row.getCell(4);
