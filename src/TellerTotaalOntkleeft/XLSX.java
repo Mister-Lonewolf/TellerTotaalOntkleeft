@@ -80,13 +80,8 @@ public class XLSX {
                         //types.add(type);
                     //}
                     Cell status = row.getCell(4);
-                    String statusValue;
-                    if(status == null){
-                        statusValue = "blanco";
-                    }
-                    else{
-                        statusValue = status.getStringCellValue();
-                    }
+                    String statusValue = String.valueOf(CellUtils.getCellValue(status));
+
                     //for (String s : statuses) {
                     //    if (statusValue.equals(s)) {
                     //        exists = true;
@@ -164,25 +159,26 @@ public class XLSX {
         totalSheet.createRow(2);
         totalSheet.getRow(2).createCell(0).setCellValue("Product");
         totalSheet.getRow(2).createCell(1).setCellValue("Aantal");
-        setStyle(true, totalSheet, 2, XLSXWorkbookTotals);
+        CellUtils.setStyle(true, totalSheet, 2, XLSXWorkbookTotals);
         //for (int i = 0; i < types.size(); i++){
         for (Map.Entry<String, Double> entry : types.entrySet()) {
             totalSheet.createRow(totalSheet.getLastRowNum()+1);
             totalSheet.getRow(totalSheet.getLastRowNum()).createCell(0).setCellValue(entry.getKey());
             totalSheet.getRow(totalSheet.getLastRowNum()).createCell(1).setCellValue(entry.getValue());
-            setStyle(false, totalSheet, totalSheet.getLastRowNum(), XLSXWorkbookTotals);
+            CellUtils.setStyle(false, totalSheet, totalSheet.getLastRowNum(), XLSXWorkbookTotals);
         }
         int rowNumber = totalSheet.getLastRowNum()+4;
         totalSheet.createRow(rowNumber);
         totalSheet.getRow(rowNumber).createCell(0).setCellValue("Statussen");
         totalSheet.getRow(rowNumber).createCell(1).setCellValue("Aantal");
-        setStyle(true, totalSheet, rowNumber, XLSXWorkbookTotals);
+        CellUtils.setStyle(true, totalSheet, rowNumber, XLSXWorkbookTotals);
         //for (String status : statuses) {
+        statuses = sortByKey(statuses);
         for (Map.Entry<String, Integer> entry : statuses.entrySet()) {
             totalSheet.createRow(totalSheet.getLastRowNum() + 1);
             totalSheet.getRow(totalSheet.getLastRowNum()).createCell(0).setCellValue(entry.getKey());
             totalSheet.getRow(totalSheet.getLastRowNum()).createCell(1).setCellValue(entry.getValue());
-            setStyle(false, totalSheet, totalSheet.getLastRowNum(), XLSXWorkbookTotals);
+            CellUtils.setStyle(false, totalSheet, totalSheet.getLastRowNum(), XLSXWorkbookTotals);
         }
 
         FileOutputStream outputStream = new FileOutputStream(file);
@@ -192,24 +188,23 @@ public class XLSX {
         XLSXWorkbookTotals.close();
     }
 
-    private void setStyle(boolean bold, XSSFSheet totalSheet, int rowNumber, XSSFWorkbook XLSXWorkbookTotals){
-        for(int i = 0; i < 2; i++){
-            XSSFCellStyle styleOld = totalSheet.getRow(rowNumber).getCell(i).getCellStyle();
-            XSSFCellStyle newStyle = XLSXWorkbookTotals.createCellStyle();
-            newStyle.cloneStyleFrom(styleOld);
-            newStyle.setBorderTop(BorderStyle.THIN);
-            newStyle.setBorderBottom(BorderStyle.THIN);
-            newStyle.setBorderLeft(BorderStyle.THIN);
-            newStyle.setBorderRight(BorderStyle.THIN);
-            //Font oldFont = totalSheet.getRow(rowNumber).getCell(i).getCellStyle().getFont();
+    public static Map<String, Integer> sortByKey(Map<String, Integer> hm){
+        // Create a list from elements of HashMap
+        List<Map.Entry<String, Integer> > list
+                = new LinkedList<Map.Entry<String, Integer> >(
+                hm.entrySet());
 
-            XSSFFont newFont = XLSXWorkbookTotals.createFont();
-            newFont.setBold(bold);
-            newFont.setFontName(newStyle.getFont().getFontName());
-            newFont.setFamily(newStyle.getFont().getFamily());
-            newStyle.setFont(newFont);
+        // Sort the list using lambda expression
+        Collections.sort(
+                list,
+                (i1, i2) -> i1.getKey().compareTo(i2.getKey()));
 
-            totalSheet.getRow(rowNumber).getCell(i).setCellStyle(newStyle);
+        // put data from sorted list to hashmap
+        HashMap<String, Integer> temp
+                = new LinkedHashMap<String, Integer>();
+        for (Map.Entry<String, Integer> aa : list) {
+            temp.put(aa.getKey(), aa.getValue());
         }
+        return temp;
     }
 }
