@@ -62,8 +62,8 @@ public class XLSX {
                     }*/
                     double amount = row.getCell(amountlocationInSheet).getNumericCellValue();
                     if(types.containsKey(type)){//if(exists){
-                        amount += types.get(type);
-                        types.replace(type, amount);
+                        double amountTemp = amount + types.get(type);
+                        types.replace(type, amountTemp);
                     }
                     types.putIfAbsent(type, amount);
 
@@ -90,10 +90,10 @@ public class XLSX {
                     }*/
                     if(statuses.containsKey(statusValue)){//if(!exists){
                         //statuses.add(statusValue);
-                        int amountOfStatuses = statuses.get(statusValue) + 1;
+                        int amountOfStatuses = statuses.get(statusValue) + (int)amount;
                         statuses.put(statusValue, amountOfStatuses);
                     }
-                    statuses.putIfAbsent(statusValue, 1);
+                    statuses.putIfAbsent(statusValue, (int)amount);
                 }
                 System.out.printf("\n%d van de %d rijen geteld.", rowNumber, XLSXWorkSheet.getLastRowNum());
             }
@@ -109,7 +109,8 @@ public class XLSX {
         Scanner scanner = new Scanner(System.in);
         filePath = filePath.substring(0, filePath.length()-5);
         filePath = filePath + " totalen ";
-        System.out.print("Geef een achtervoegsel om toe te voegen aan de bestandsnaam (zonder \".xlsx\" er achter): ");
+        String output = "Geef een achtervoegsel om toe te voegen aan de bestandsnaam \"" + filePath + "\" (zonder \".xlsx\" er achter): ";
+        System.out.print(output);
         String newFilenamePart = scanner.nextLine();
         filePath += newFilenamePart + ".xlsx";
         File file = new File(filePath);
@@ -125,7 +126,7 @@ public class XLSX {
             }
             else{
                 System.out.println("Naam voor nieuwe totaal file bestaat al!");
-                System.out.print("Geef een achtervoegsel zoals bijvoorbeeld een datum om toe te voegen aan de bestandsnaam (zonder \".xlsx\" er achter): ");
+                System.out.print(output);
                 newFilenamePart = scanner.nextLine();
                 filePath = filePath.substring(0, filePath.length()-5);
                 filePath += "na " + newFilenamePart + ".xlsx";
