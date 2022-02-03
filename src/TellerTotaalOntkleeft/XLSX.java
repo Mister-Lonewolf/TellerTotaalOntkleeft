@@ -15,7 +15,6 @@ public class XLSX {
     String filePath;
     String ontkleefDate;
     Map<String, Double> types = new HashMap<>();
-    //double[] amounts = new double[0];
     Map<String, Integer> statuses = new HashMap<>();
     int typelocationInSheet = 1;
     int amountlocationInSheet = 23;
@@ -49,47 +48,20 @@ public class XLSX {
         int rowNumber = 0;
         //iterating over excel file
         for (Row row : XLSXWorkSheet) {
-            //boolean exists = false;
-            //int numberOfType = 0;
             if (!row.getZeroHeight()) {
-                if (rowNumber != 0) {
+                if (rowNumber != 0 && row.getCell(0).getNumericCellValue() > 0) {
                     String type = row.getCell(typelocationInSheet).getStringCellValue();
-                    /*for(int i = 0; i < types.size(); i++) {
-                        if(type.equals(types.get(i))){
-                            exists = true;
-                            numberOfType = i;
-                        }
-                    }*/
                     double amount = row.getCell(amountlocationInSheet).getNumericCellValue();
-                    if(types.containsKey(type)){//if(exists){
+                    if(types.containsKey(type)){
                         double amountTemp = amount + types.get(type);
                         types.replace(type, amountTemp);
                     }
                     types.putIfAbsent(type, amount);
 
-                    /*else{
-                        double[] tempAmount = new double[amounts.length+1];
-                        System.arraycopy(amounts, 0, tempAmount, 0, amounts.length);
-                        tempAmount[tempAmount.length-1] = amount;
-                        amounts = tempAmount;
-
-                        String[] tempType = new String[types.size()+1];
-                        System.arraycopy(types, 0, tempType, 0, types.size());
-                        tempType[tempType.length-1] = type;
-                        types = tempType;
-                        types.add(type);
-                    }*/
                     Cell status = row.getCell(4);
                     String statusValue = String.valueOf(CellUtils.getCellValue(status));
 
-                    /*for (String s : statuses) {
-                        if (statusValue.equals(s)) {
-                            exists = true;
-                            break;
-                        }
-                    }*/
-                    if(statuses.containsKey(statusValue)){//if(!exists){
-                        //statuses.add(statusValue);
+                    if(statuses.containsKey(statusValue)){
                         int amountOfStatuses = statuses.get(statusValue) + (int)amount;
                         statuses.put(statusValue, amountOfStatuses);
                     }
@@ -173,7 +145,6 @@ public class XLSX {
         totalSheet.getRow(rowNumber).createCell(0).setCellValue("Statussen");
         totalSheet.getRow(rowNumber).createCell(1).setCellValue("Aantal");
         CellUtils.setStyle(true, totalSheet, rowNumber, XLSXWorkbookTotals);
-        //for (String status : statuses) {
         statuses = sortByKey(statuses);
         for (Map.Entry<String, Integer> entry : statuses.entrySet()) {
             totalSheet.createRow(totalSheet.getLastRowNum() + 1);
