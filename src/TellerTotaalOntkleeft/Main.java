@@ -9,7 +9,8 @@ public class Main{
 
         try {
             XLSX XLSXFile = new XLSX(args[0]);
-            XLSXFile.countTotalOfEach();
+            XLSXFile.selectSheet();
+            XLSXFile.countPerDate();
             XLSXFile.writeFile();
         }
         catch (Exception e) {

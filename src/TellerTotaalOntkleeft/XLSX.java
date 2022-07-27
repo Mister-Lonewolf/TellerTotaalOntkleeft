@@ -2,22 +2,30 @@ package TellerTotaalOntkleeft;
 
 import java.io.*;
 
-import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.*;
 
 import java.io.File;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
+
 
 public class XLSX {
     private final XSSFWorkbook XLSXWorkbookObject;
     String filePath;
-    String ontkleefDate;
-    Map<String, Double> types = new HashMap<>();
-    Map<String, Integer> statuses = new HashMap<>();
+    String unstickDate;
+
+    Map<String, Map<String, Integer>> amountPerDateAndType = new HashMap<>(); // map<typeOfSticker, map<date, amount>>
+    List<String> allDates = new ArrayList<>();
+
+    //Map<String, Double> types = new HashMap<>();
+    //Map<String, Integer> statuses = new HashMap<>();
     int typelocationInSheet = 1;
+    int dateLocation = 4;
     int amountlocationInSheet = 23;
+
+    int sheetNumber = -1;
 
     public XLSX(String filename) throws IOException{
         filePath = "." + File.separator + filename;
@@ -27,11 +35,9 @@ public class XLSX {
         inputFile.close();
     }
 
-    public void countTotalOfEach() {
-        int sheetNumber = -1;
+    public void selectSheet(){
         Scanner scanner = new Scanner(System.in);
         boolean keepLooping = true;
-
         while(keepLooping) {
             System.out.print("\nWelk werkblad wilt u tellen(geef de nummer van het blad): ");
             sheetNumber = scanner.nextInt();
@@ -43,33 +49,77 @@ public class XLSX {
                 keepLooping = false;
             }
         }
+    }
+
+//    public void countTotalOfEach() {
+//        XSSFSheet XLSXWorkSheet = XLSXWorkbookObject.getSheetAt(--sheetNumber);
+//        ontkleefDate = XLSXWorkSheet.getSheetName();
+//        int rowNumber = 0;
+//        //iterating over excel file
+//        for (Row row : XLSXWorkSheet) {
+//            if (!row.getZeroHeight()) {
+//                if (rowNumber != 0 && row.getCell(0).getNumericCellValue() > 0) {
+//                    String type = row.getCell(typelocationInSheet).getStringCellValue();
+//                    double amount = row.getCell(amountlocationInSheet).getNumericCellValue();
+//                    if(types.containsKey(type)){
+//                        double amountTemp = amount + types.get(type);
+//                        types.replace(type, amountTemp);
+//                    }
+//                    types.putIfAbsent(type, amount);
+//
+//                    Cell status = row.getCell(4);
+//                    String statusValue = String.valueOf(CellUtils.getCellValue(status));
+//
+//                    if(statuses.containsKey(statusValue)){
+//                        int amountOfStatuses = statuses.get(statusValue) + (int)amount;
+//                        statuses.put(statusValue, amountOfStatuses);
+//                    }
+//                    statuses.putIfAbsent(statusValue, (int)amount);
+//                }
+//                System.out.printf("\n%d van de %d rijen geteld.", rowNumber, XLSXWorkSheet.getLastRowNum());
+//            }
+//            else{
+//                System.out.printf("\n%d van de %d rijen is een verborgen rij en dus niet geteld.", rowNumber, XLSXWorkSheet.getLastRowNum());
+//            }
+//            rowNumber++;
+//        }
+//        System.out.println("\n");
+//    }
+
+    public void countPerDate() {
         XSSFSheet XLSXWorkSheet = XLSXWorkbookObject.getSheetAt(--sheetNumber);
-        ontkleefDate = XLSXWorkSheet.getSheetName();
+        unstickDate = XLSXWorkSheet.getSheetName();
         int rowNumber = 0;
         //iterating over excel file
         for (Row row : XLSXWorkSheet) {
             if (!row.getZeroHeight()) {
-                if (rowNumber != 0 && row.getCell(0).getNumericCellValue() > 0) {
+                if (rowNumber != 0 && row.getCell(0).getNumericCellValue() > 0 && row.getCell(dateLocation) != null) {
                     String type = row.getCell(typelocationInSheet).getStringCellValue();
-                    double amount = row.getCell(amountlocationInSheet).getNumericCellValue();
-                    if(types.containsKey(type)){
-                        double amountTemp = amount + types.get(type);
-                        types.replace(type, amountTemp);
+                    Cell dateCell = row.getCell(dateLocation);
+                    String dateValue = String.valueOf(CellUtils.getCellValue(dateCell));
+                    int amount = (int)row.getCell(amountlocationInSheet).getNumericCellValue();
+                    if (amountPerDateAndType.containsKey(type)) {
+                        Map<String, Integer> tempPerDate = amountPerDateAndType.get(type);
+                        if(tempPerDate.containsKey(dateValue)) {
+                            int amountTemp = amount + tempPerDate.get(dateValue);
+                            tempPerDate.replace(dateValue, amountTemp);
+                        }
+                        tempPerDate.putIfAbsent(dateValue, amount);
+                        if(!allDates.contains(dateValue)){
+                            allDates.add(dateValue);
+                        }
                     }
-                    types.putIfAbsent(type, amount);
-
-                    Cell status = row.getCell(4);
-                    String statusValue = String.valueOf(CellUtils.getCellValue(status));
-
-                    if(statuses.containsKey(statusValue)){
-                        int amountOfStatuses = statuses.get(statusValue) + (int)amount;
-                        statuses.put(statusValue, amountOfStatuses);
+                    else {
+                        if(!allDates.contains(dateValue)){
+                            allDates.add(dateValue);
+                        }
+                        Map<String, Integer> amountPerDate = new HashMap<>();
+                        amountPerDate.put(dateValue, amount);
+                        amountPerDateAndType.putIfAbsent(type, amountPerDate);
                     }
-                    statuses.putIfAbsent(statusValue, (int)amount);
                 }
                 System.out.printf("\n%d van de %d rijen geteld.", rowNumber, XLSXWorkSheet.getLastRowNum());
-            }
-            else{
+            } else {
                 System.out.printf("\n%d van de %d rijen is een verborgen rij en dus niet geteld.", rowNumber, XLSXWorkSheet.getLastRowNum());
             }
             rowNumber++;
@@ -105,73 +155,13 @@ public class XLSX {
                 file = new File(filePath);
             }
         }
-        XSSFWorkbook XLSXWorkbookTotals = new XSSFWorkbook();
-        XSSFSheet totalSheet = XLSXWorkbookTotals.createSheet(ontkleefDate);
-        totalSheet.createRow(0);
-        totalSheet.getRow(0).createCell(0).setCellValue(filePath.substring(filePath.lastIndexOf(File.separator)+1, filePath.length()-5));
-        totalSheet.getRow(0).createCell(1).setCellValue("");
-        int sizeColumnOne = totalSheet.getRow(0).getCell(0).getStringCellValue().length();
-        for (Map.Entry<String, Double> entry : types.entrySet()) {
-            if(entry.getKey().length() > sizeColumnOne){
-                sizeColumnOne = entry.getKey().length();
-            }
-        }
-        sizeColumnOne += 6;
 
-        totalSheet.addMergedRegion(new CellRangeAddress(0,0,0,1));
-        totalSheet.setColumnWidth(0, 256*sizeColumnOne);
-        totalSheet.autoSizeColumn(1);
-
-        XSSFCellStyle style = XLSXWorkbookTotals.createCellStyle();
-        XSSFFont font = XLSXWorkbookTotals.createFont();
-        font.setFontHeight(14);
-        style.setFont(font);
-        style.setAlignment(HorizontalAlignment.CENTER);
-        totalSheet.getRow(0).getCell(0).setCellStyle(style);
-
-        totalSheet.createRow(2);
-        totalSheet.getRow(2).createCell(0).setCellValue("Product");
-        totalSheet.getRow(2).createCell(1).setCellValue("Aantal");
-        CellUtils.setStyle(true, totalSheet, 2, XLSXWorkbookTotals);
-        //for (int i = 0; i < types.size(); i++){
-        for (Map.Entry<String, Double> entry : types.entrySet()) {
-            totalSheet.createRow(totalSheet.getLastRowNum()+1);
-            totalSheet.getRow(totalSheet.getLastRowNum()).createCell(0).setCellValue(entry.getKey());
-            totalSheet.getRow(totalSheet.getLastRowNum()).createCell(1).setCellValue(entry.getValue());
-            CellUtils.setStyle(false, totalSheet, totalSheet.getLastRowNum(), XLSXWorkbookTotals);
-        }
-        int rowNumber = totalSheet.getLastRowNum()+4;
-        totalSheet.createRow(rowNumber);
-        totalSheet.getRow(rowNumber).createCell(0).setCellValue("Statussen");
-        totalSheet.getRow(rowNumber).createCell(1).setCellValue("Aantal");
-        CellUtils.setStyle(true, totalSheet, rowNumber, XLSXWorkbookTotals);
-        statuses = sortByKey(statuses);
-        for (Map.Entry<String, Integer> entry : statuses.entrySet()) {
-            totalSheet.createRow(totalSheet.getLastRowNum() + 1);
-            totalSheet.getRow(totalSheet.getLastRowNum()).createCell(0).setCellValue(entry.getKey());
-            totalSheet.getRow(totalSheet.getLastRowNum()).createCell(1).setCellValue(entry.getValue());
-            CellUtils.setStyle(false, totalSheet, totalSheet.getLastRowNum(), XLSXWorkbookTotals);
-        }
+        XSSFWorkbook XLSXWorkbookTotals = CellUtils.createResultWorkBook(filePath, unstickDate, amountPerDateAndType, allDates);
 
         FileOutputStream outputStream = new FileOutputStream(file);
         XLSXWorkbookTotals.write(outputStream);
         outputStream.close();
         XLSXWorkbookObject.close();
         XLSXWorkbookTotals.close();
-    }
-
-    public static Map<String, Integer> sortByKey(Map<String, Integer> map){
-        // Create a list from elements of HashMap
-        List<Map.Entry<String, Integer> > list = new LinkedList<>(map.entrySet());
-
-        // Sort the list using lambda expression
-        list.sort(Map.Entry.comparingByKey());
-
-        // put data from sorted list to hashmap
-        HashMap<String, Integer> temp = new LinkedHashMap<>();
-        for (Map.Entry<String, Integer> aa : list) {
-            temp.put(aa.getKey(), aa.getValue());
-        }
-        return temp;
     }
 }
