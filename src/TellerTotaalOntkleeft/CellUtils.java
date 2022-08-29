@@ -56,19 +56,12 @@ public class CellUtils {
         }
     }
 
-    public static void setStyle(boolean bold, XSSFSheet totalSheet, int rowNumber, XSSFWorkbook XLSXWorkbookTotals, int amountOfDates, boolean skipIndexAndTotal){
+    public static void setStyle(boolean bold, XSSFSheet totalSheet, int rowNumber, XSSFWorkbook XLSXWorkbookTotals, int amountOfDates, boolean skipIndexAndTotal, ArrayList<Integer> totals){
         int start = skipIndexAndTotal?1:0;
         int end = skipIndexAndTotal?amountOfDates:1+amountOfDates;
-        ArrayList<Integer> totals = new ArrayList<>();
         for(int i = start; i <= end; i++) {
             if (totalSheet.getRow(rowNumber).getCell(i) == null) {
                 totalSheet.getRow(rowNumber).createCell(i).setCellValue(0);
-            }
-            if(rowNumber == 2){
-                String date = totalSheet.getRow(rowNumber).getCell(i).getStringCellValue();
-                if(i!=0 && !date.contains("BUS") && !date.contains("TRAM") && !date.contains("POLDER")){
-                    totals.add(i);
-                }
             }
             //XSSFCellStyle styleOld = totalSheet.getRow(rowNumber).getCell(i).getCellStyle();
             XSSFCellStyle newStyle = XLSXWorkbookTotals.createCellStyle();
@@ -79,9 +72,8 @@ public class CellUtils {
             newStyle.setBorderRight(BorderStyle.THIN);
             //Font oldFont = totalSheet.getRow(rowNumber).getCell(i).getCellStyle().getFont();
             if(totals.contains(i)){
-                XSSFColor orange = new XSSFColor();
-                orange.setRGB(new byte[] {(byte) 255, (byte) 165, (byte) 0, (byte) 255});
-                newStyle.setBorderColor(XSSFCellBorder.BorderSide.LEFT, orange);
+                newStyle.setFillForegroundColor(IndexedColors.LIGHT_ORANGE.getIndex());
+                newStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
             }
 
             XSSFFont newFont = XLSXWorkbookTotals.createFont();
@@ -130,7 +122,14 @@ public class CellUtils {
             totalSheet.getRow(2).createCell(++columnNumber).setCellValue(date);
         }
         totalSheet.getRow(2).createCell(++columnNumber).setCellValue("Totaal");
-        CellUtils.setStyle(true, totalSheet, 2, XLSXWorkbookTotals, allDates.size(), false);
+        ArrayList<Integer> totals = new ArrayList<>();
+        for(int i = 0; i <= columnNumber; i++) {
+            String date = totalSheet.getRow(2).getCell(i).getStringCellValue();
+            if (i != 0 && !date.contains("BUS") && !date.contains("TRAM") && !date.contains("POLDER")) {
+                totals.add(i);
+            }
+        }
+        CellUtils.setStyle(true, totalSheet, 2, XLSXWorkbookTotals, allDates.size(), false, totals);
         int lastRow = totalSheet.getLastRowNum();
         int totalDayRow = lastRow+1+amountPerDateAndType.keySet().size();
         totalSheet.createRow(totalDayRow);
@@ -155,9 +154,9 @@ public class CellUtils {
                 }
             }
             totalSheet.getRow(lastRow).createCell(columnNumber).setCellValue(total);
-            CellUtils.setStyle(false, totalSheet, lastRow, XLSXWorkbookTotals, allDates.size(), false);
+            CellUtils.setStyle(false, totalSheet, lastRow, XLSXWorkbookTotals, allDates.size(), false, totals);
         }
-        CellUtils.setStyle(false, totalSheet, totalDayRow, XLSXWorkbookTotals, allDates.size(), true);
+        CellUtils.setStyle(false, totalSheet, totalDayRow, XLSXWorkbookTotals, allDates.size(), true, totals);
 
 //
 //        totalSheet.getRow(totalSheet.getLastRowNum()+1);
