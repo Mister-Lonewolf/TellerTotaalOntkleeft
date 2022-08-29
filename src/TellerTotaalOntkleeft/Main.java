@@ -10,7 +10,7 @@ public class Main{
         try {
             XLSX XLSXFile = new XLSX(args[0]);
             XLSXFile.selectSheet();
-            XLSXFile.countPerDate();
+            XLSXFile.countPerDateAndVehicleType();
             XLSXFile.writeFile();
         }
         catch (Exception e) {

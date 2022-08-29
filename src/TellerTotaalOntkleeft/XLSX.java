@@ -6,8 +6,6 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.*;
 
 import java.io.File;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 
@@ -18,12 +16,10 @@ public class XLSX {
 
     Map<String, Map<String, Integer>> amountPerDateAndType = new HashMap<>(); // map<typeOfSticker, map<date, amount>>
     List<String> allDates = new ArrayList<>();
-
-    //Map<String, Double> types = new HashMap<>();
-    //Map<String, Integer> statuses = new HashMap<>();
-    int typelocationInSheet = 1;
+    int vehicleTypeLocationInSheet = 0;
+    int typeLocationInSheet = 1;
     int dateLocation = 4;
-    int amountlocationInSheet = 23;
+    int amountLocationInSheet = 23;
 
     int sheetNumber = -1;
 
@@ -51,42 +47,7 @@ public class XLSX {
         }
     }
 
-//    public void countTotalOfEach() {
-//        XSSFSheet XLSXWorkSheet = XLSXWorkbookObject.getSheetAt(--sheetNumber);
-//        ontkleefDate = XLSXWorkSheet.getSheetName();
-//        int rowNumber = 0;
-//        //iterating over excel file
-//        for (Row row : XLSXWorkSheet) {
-//            if (!row.getZeroHeight()) {
-//                if (rowNumber != 0 && row.getCell(0).getNumericCellValue() > 0) {
-//                    String type = row.getCell(typelocationInSheet).getStringCellValue();
-//                    double amount = row.getCell(amountlocationInSheet).getNumericCellValue();
-//                    if(types.containsKey(type)){
-//                        double amountTemp = amount + types.get(type);
-//                        types.replace(type, amountTemp);
-//                    }
-//                    types.putIfAbsent(type, amount);
-//
-//                    Cell status = row.getCell(4);
-//                    String statusValue = String.valueOf(CellUtils.getCellValue(status));
-//
-//                    if(statuses.containsKey(statusValue)){
-//                        int amountOfStatuses = statuses.get(statusValue) + (int)amount;
-//                        statuses.put(statusValue, amountOfStatuses);
-//                    }
-//                    statuses.putIfAbsent(statusValue, (int)amount);
-//                }
-//                System.out.printf("\n%d van de %d rijen geteld.", rowNumber, XLSXWorkSheet.getLastRowNum());
-//            }
-//            else{
-//                System.out.printf("\n%d van de %d rijen is een verborgen rij en dus niet geteld.", rowNumber, XLSXWorkSheet.getLastRowNum());
-//            }
-//            rowNumber++;
-//        }
-//        System.out.println("\n");
-//    }
-
-    public void countPerDate() {
+    public void countPerDateAndVehicleType() {
         XSSFSheet XLSXWorkSheet = XLSXWorkbookObject.getSheetAt(--sheetNumber);
         unstickDate = XLSXWorkSheet.getSheetName();
         int rowNumber = 0;
@@ -94,10 +55,17 @@ public class XLSX {
         for (Row row : XLSXWorkSheet) {
             if (!row.getZeroHeight()) {
                 if (rowNumber != 0 && row.getCell(0).getNumericCellValue() > 0 && row.getCell(dateLocation) != null) {
-                    String type = row.getCell(typelocationInSheet).getStringCellValue();
+                    String type = row.getCell(typeLocationInSheet).getStringCellValue();
+                    int vehicleType = (int) row.getCell(vehicleTypeLocationInSheet).getNumericCellValue();
                     Cell dateCell = row.getCell(dateLocation);
                     String dateValue = String.valueOf(CellUtils.getCellValue(dateCell));
-                    int amount = (int)row.getCell(amountlocationInSheet).getNumericCellValue();
+                    int amount = (int)row.getCell(amountLocationInSheet).getNumericCellValue();
+                    if((VehicleType.BUS.beginNumber <= vehicleType && VehicleType.BUS.endNumber >= vehicleType)||
+                            (VehicleType.POLDER.beginNumber <= vehicleType && VehicleType.POLDER.endNumber >= vehicleType)){
+                        dateValue += " BUS";
+                    } else if (VehicleType.TRAM.beginNumber <= vehicleType && VehicleType.TRAM.endNumber >= vehicleType) {
+                        dateValue += " TRAM";
+                    }
                     if (amountPerDateAndType.containsKey(type)) {
                         Map<String, Integer> tempPerDate = amountPerDateAndType.get(type);
                         if(tempPerDate.containsKey(dateValue)) {
