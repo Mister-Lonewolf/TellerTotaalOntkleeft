@@ -59,12 +59,16 @@ public class XLSX {
                     int vehicleType = (int) row.getCell(vehicleTypeLocationInSheet).getNumericCellValue();
                     Cell dateCell = row.getCell(dateLocation);
                     String dateValue = String.valueOf(CellUtils.getCellValue(dateCell));
+                    String dateValueTotal = String.valueOf(CellUtils.getCellValue(dateCell));
                     int amount = (int)row.getCell(amountLocationInSheet).getNumericCellValue();
-                    if((VehicleType.BUS.beginNumber <= vehicleType && VehicleType.BUS.endNumber >= vehicleType)||
-                            (VehicleType.POLDER.beginNumber <= vehicleType && VehicleType.POLDER.endNumber >= vehicleType)){
+                    int amountTotal = (int)row.getCell(amountLocationInSheet).getNumericCellValue();
+                    if(VehicleType.BUS.beginNumber <= vehicleType && VehicleType.BUS.endNumber >= vehicleType){
                         dateValue += " BUS";
                     } else if (VehicleType.TRAM.beginNumber <= vehicleType && VehicleType.TRAM.endNumber >= vehicleType) {
                         dateValue += " TRAM";
+                    }
+                    else if (VehicleType.POLDER.beginNumber <= vehicleType && VehicleType.POLDER.endNumber >= vehicleType){
+                        dateValue += " POLDER";
                     }
                     if (amountPerDateAndType.containsKey(type)) {
                         Map<String, Integer> tempPerDate = amountPerDateAndType.get(type);
@@ -76,6 +80,16 @@ public class XLSX {
                         if(!allDates.contains(dateValue)){
                             allDates.add(dateValue);
                         }
+
+                        Map<String, Integer> tempPerDateTotal = amountPerDateAndType.get(type);
+                        if(tempPerDateTotal.containsKey(dateValueTotal)) {
+                            int amountTemp = amountTotal + tempPerDateTotal.get(dateValueTotal);
+                            tempPerDateTotal.replace(dateValueTotal, amountTemp);
+                        }
+                        tempPerDateTotal.putIfAbsent(dateValueTotal, amountTotal);
+                        if(!allDates.contains(dateValueTotal)){
+                            allDates.add(dateValueTotal);
+                        }
                     }
                     else {
                         if(!allDates.contains(dateValue)){
@@ -84,6 +98,16 @@ public class XLSX {
                         Map<String, Integer> amountPerDate = new HashMap<>();
                         amountPerDate.put(dateValue, amount);
                         amountPerDateAndType.putIfAbsent(type, amountPerDate);
+
+                        if(!allDates.contains(dateValueTotal)){
+                            allDates.add(dateValueTotal);
+                        }
+                        Map<String, Integer> amountPerDateTotal = new HashMap<>();
+                        amountPerDateTotal.put(dateValueTotal, amountTotal);
+                        amountPerDateAndType.putIfAbsent(type, amountPerDateTotal);
+                        if(amountPerDateAndType.containsKey(type)){
+                            amountPerDateAndType.get(type).put(dateValueTotal, amountTotal);
+                        }
                     }
                 }
                 System.out.printf("\n%d van de %d rijen geteld.", rowNumber, XLSXWorkSheet.getLastRowNum());

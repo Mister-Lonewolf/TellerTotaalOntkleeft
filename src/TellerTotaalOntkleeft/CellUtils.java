@@ -1,11 +1,10 @@
 package TellerTotaalOntkleeft;
 
+import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
-import org.apache.poi.xssf.usermodel.XSSFCellStyle;
-import org.apache.poi.xssf.usermodel.XSSFFont;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.usermodel.*;
+import org.apache.poi.xssf.usermodel.extensions.XSSFCellBorder;
 
 import java.io.File;
 import java.text.DateFormat;
@@ -41,21 +40,49 @@ public class CellUtils {
         }
     }
 
+    static void colorOrangeOrYellow(XSSFWorkbook XLSXWorkbookObject, XSSFCellStyle style, int cellNumber, boolean colorNumber) {
+        if (colorNumber) {
+            style.setFillForegroundColor(IndexedColors.LIGHT_ORANGE.getIndex());
+            if (cellNumber != 0) {
+                XSSFFont newFont = XLSXWorkbookObject.createFont();
+                newFont.setBold(true);
+                newFont.setFontName(style.getFont().getFontName());
+                newFont.setFontHeightInPoints(style.getFont().getFontHeightInPoints());
+                newFont.setFamily(style.getFont().getFamily());
+                style.setFont(newFont);
+            }
+        } else {
+            style.setFillForegroundColor(IndexedColors.YELLOW.getIndex());
+        }
+    }
+
     public static void setStyle(boolean bold, XSSFSheet totalSheet, int rowNumber, XSSFWorkbook XLSXWorkbookTotals, int amountOfDates, boolean skipIndexAndTotal){
         int start = skipIndexAndTotal?1:0;
         int end = skipIndexAndTotal?amountOfDates:1+amountOfDates;
+        ArrayList<Integer> totals = new ArrayList<>();
         for(int i = start; i <= end; i++) {
             if (totalSheet.getRow(rowNumber).getCell(i) == null) {
                 totalSheet.getRow(rowNumber).createCell(i).setCellValue(0);
             }
-            XSSFCellStyle styleOld = totalSheet.getRow(rowNumber).getCell(i).getCellStyle();
+            if(rowNumber == 2){
+                String date = totalSheet.getRow(rowNumber).getCell(i).getStringCellValue();
+                if(i!=0 && !date.contains("BUS") && !date.contains("TRAM") && !date.contains("POLDER")){
+                    totals.add(i);
+                }
+            }
+            //XSSFCellStyle styleOld = totalSheet.getRow(rowNumber).getCell(i).getCellStyle();
             XSSFCellStyle newStyle = XLSXWorkbookTotals.createCellStyle();
-            newStyle.cloneStyleFrom(styleOld);
+            //newStyle.cloneStyleFrom(styleOld);
             newStyle.setBorderTop(BorderStyle.THIN);
             newStyle.setBorderBottom(BorderStyle.THIN);
             newStyle.setBorderLeft(BorderStyle.THIN);
             newStyle.setBorderRight(BorderStyle.THIN);
             //Font oldFont = totalSheet.getRow(rowNumber).getCell(i).getCellStyle().getFont();
+            if(totals.contains(i)){
+                XSSFColor orange = new XSSFColor();
+                orange.setRGB(new byte[] {(byte) 255, (byte) 165, (byte) 0, (byte) 255});
+                newStyle.setBorderColor(XSSFCellBorder.BorderSide.LEFT, orange);
+            }
 
             XSSFFont newFont = XLSXWorkbookTotals.createFont();
             newFont.setBold(bold);
@@ -123,7 +150,9 @@ public class CellUtils {
                 else {
                     totalSheet.getRow(totalDayRow).createCell(locationOfDate).setCellValue(dateIntegerEntry.getValue());
                 }
-                total+=dateIntegerEntry.getValue();
+                if(dateIntegerEntry.getKey().contains("BUS")||dateIntegerEntry.getKey().contains("TRAM")||dateIntegerEntry.getKey().contains("POLDER")) {
+                    total += dateIntegerEntry.getValue();
+                }
             }
             totalSheet.getRow(lastRow).createCell(columnNumber).setCellValue(total);
             CellUtils.setStyle(false, totalSheet, lastRow, XLSXWorkbookTotals, allDates.size(), false);
