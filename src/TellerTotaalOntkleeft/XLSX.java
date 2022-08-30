@@ -21,6 +21,8 @@ public class XLSX {
     int dateLocation = 4;
     int amountLocationInSheet = 23;
 
+    int dateTotalSize = 0;
+
     int sheetNumber = -1;
 
     public XLSX(String filename) throws IOException{
@@ -60,6 +62,8 @@ public class XLSX {
                     Cell dateCell = row.getCell(dateLocation);
                     String dateValue = String.valueOf(CellUtils.getCellValue(dateCell));
                     String dateValueTotal = String.valueOf(CellUtils.getCellValue(dateCell));
+                    dateTotalSize = dateValueTotal.length() * 280;
+                    dateValueTotal += " z";
                     int amount = (int)row.getCell(amountLocationInSheet).getNumericCellValue();
                     int amountTotal = (int)row.getCell(amountLocationInSheet).getNumericCellValue();
                     if(VehicleType.BUS.beginNumber <= vehicleType && VehicleType.BUS.endNumber >= vehicleType){
@@ -71,25 +75,8 @@ public class XLSX {
                         dateValue += " POLDER";
                     }
                     if (amountPerDateAndType.containsKey(type)) {
-                        Map<String, Integer> tempPerDate = amountPerDateAndType.get(type);
-                        if(tempPerDate.containsKey(dateValue)) {
-                            int amountTemp = amount + tempPerDate.get(dateValue);
-                            tempPerDate.replace(dateValue, amountTemp);
-                        }
-                        tempPerDate.putIfAbsent(dateValue, amount);
-                        if(!allDates.contains(dateValue)){
-                            allDates.add(dateValue);
-                        }
-
-                        Map<String, Integer> tempPerDateTotal = amountPerDateAndType.get(type);
-                        if(tempPerDateTotal.containsKey(dateValueTotal)) {
-                            int amountTemp = amountTotal + tempPerDateTotal.get(dateValueTotal);
-                            tempPerDateTotal.replace(dateValueTotal, amountTemp);
-                        }
-                        tempPerDateTotal.putIfAbsent(dateValueTotal, amountTotal);
-                        if(!allDates.contains(dateValueTotal)){
-                            allDates.add(dateValueTotal);
-                        }
+                        addToTotalArray(type, dateValue, amount);
+                        addToTotalArray(type, dateValueTotal, amountTotal);
                     }
                     else {
                         if(!allDates.contains(dateValue)){
@@ -117,6 +104,18 @@ public class XLSX {
             rowNumber++;
         }
         System.out.println("\n");
+    }
+
+    private void addToTotalArray(String type, String dateValue, int amount) {
+        Map<String, Integer> tempPerDate = amountPerDateAndType.get(type);
+        if(tempPerDate.containsKey(dateValue)) {
+            int amountTemp = amount + tempPerDate.get(dateValue);
+            tempPerDate.replace(dateValue, amountTemp);
+        }
+        tempPerDate.putIfAbsent(dateValue, amount);
+        if(!allDates.contains(dateValue)){
+            allDates.add(dateValue);
+        }
     }
 
     public void writeFile() throws IOException{
@@ -148,7 +147,7 @@ public class XLSX {
             }
         }
 
-        XSSFWorkbook XLSXWorkbookTotals = CellUtils.createResultWorkBook(filePath, unstickDate, amountPerDateAndType, allDates);
+        XSSFWorkbook XLSXWorkbookTotals = CellUtils.createResultWorkBook(filePath, unstickDate, amountPerDateAndType, allDates, dateTotalSize);
 
         FileOutputStream outputStream = new FileOutputStream(file);
         XLSXWorkbookTotals.write(outputStream);
