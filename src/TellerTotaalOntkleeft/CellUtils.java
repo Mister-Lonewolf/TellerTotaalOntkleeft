@@ -87,10 +87,10 @@ public class CellUtils {
                 newStyle.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex());
                 newStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
             }
-            if (i == amountOfDates + 1 && totalDayRow) {
-                newStyle.setFillForegroundColor(IndexedColors.LIGHT_ORANGE.getIndex());
-                newStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-            }
+//            if (i == amountOfDates + 1 && totalDayRow) {
+//                newStyle.setFillForegroundColor(IndexedColors.LIGHT_ORANGE.getIndex());
+//                newStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+//            }
             XSSFFont newFont = XLSXWorkbookTotals.createFont();
             newFont.setBold(bold);
             newFont.setFontName(newStyle.getFont().getFontName());
